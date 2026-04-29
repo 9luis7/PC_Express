@@ -91,7 +91,7 @@ REM Verificar se precisa instalar dependencias Python
 if errorlevel 1 (
     echo    Instalando dependencias Python ^(isso pode demorar^)...
     .venv\Scripts\python.exe -m pip install --upgrade pip --quiet
-    .venv\Scripts\python.exe -m pip install -r requirement.txt --no-input --quiet
+    .venv\Scripts\python.exe -m pip install -r requirements.txt --no-input --quiet
     if errorlevel 1 (
         echo    [ERRO] Falha ao instalar dependencias Python
         pause

@@ -48,7 +48,7 @@ Convenções de nomes:
 
 ### 1. **Instalação das Dependências**
 ```bash
-pip install -r requirement.txt
+pip install -r requirements.txt
 ```
 
 ### 2. **Geração de Dados Iniciais** (Opcional)

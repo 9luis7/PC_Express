@@ -41,7 +41,7 @@ if not exist ".venv" (
 if not exist ".venv\Lib\site-packages\fastapi" (
     echo Instalando dependencias Python...
     .venv\Scripts\python.exe -m pip install --upgrade pip
-    .venv\Scripts\python.exe -m pip install -r requirement.txt --no-input
+    .venv\Scripts\python.exe -m pip install -r requirements.txt --no-input
 )
 
 REM Configurar banco de dados

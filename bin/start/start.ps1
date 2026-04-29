@@ -388,7 +388,7 @@ if (-not (Test-Path ".venv")) {
 if (-not (Test-Path ".venv\Lib\site-packages\fastapi")) {
     Write-ColorOutput "Instalando dependências Python..." "Yellow"
     & ".venv\Scripts\python.exe" -m pip install --upgrade pip
-    & ".venv\Scripts\python.exe" -m pip install -r requirement.txt --no-input
+    & ".venv\Scripts\python.exe" -m pip install -r requirements.txt --no-input
 }
 
 if (-not (Test-Path "inventory.db")) {

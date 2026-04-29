@@ -18,12 +18,12 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /workspace
 
 # Copiar arquivos de dependências
-COPY requirement.txt .
+COPY requirements.txt .
 COPY frontend/package*.json ./frontend/
 
 # Instalar dependências Python
 RUN pip install --upgrade pip
-RUN pip install -r requirement.txt
+RUN pip install -r requirements.txt
 
 # Instalar dependências Node.js
 RUN cd frontend && npm install

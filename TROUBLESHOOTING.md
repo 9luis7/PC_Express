@@ -184,13 +184,13 @@ ERROR: Could not install packages due to an OSError
 
 2. **Instale novamente**
    ```cmd
-   .venv\Scripts\python.exe -m pip install -r requirement.txt
+   .venv\Scripts\python.exe -m pip install -r requirements.txt
    ```
 
 3. **Se persistir (Windows)**
    ```cmd
    # Execute como Administrador
-   .venv\Scripts\python.exe -m pip install -r requirement.txt --user
+   .venv\Scripts\python.exe -m pip install -r requirements.txt --user
    ```
 
 ---

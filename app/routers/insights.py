@@ -275,18 +275,54 @@ def get_product_insights(
 
 @router.get("/low-stock-alerts")
 def get_low_stock_insights(
-    db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
 ):
-    """Get insights for products with low stock"""
-    try:
-        # Very simple version
-        return {
-            "low_stock_products": [],
-            "total_low_stock": 0,
-            "critical_count": 0,
-            "high_count": 0,
-        }
+    """Produtos com estoque abaixo do mínimo, classificados por severidade.
 
+    - critical: estoque == 0
+    - high: 0 < estoque <= estoque_minimo
+    """
+    try:
+        low_stock = (
+            db.query(Product)
+            .filter(
+                Product.user_id == current_user.id,
+                Product.quantidade <= Product.estoque_minimo,
+            )
+            .order_by(Product.quantidade.asc(), Product.nome.asc())
+            .all()
+        )
+
+        items = []
+        critical_count = 0
+        high_count = 0
+        for p in low_stock:
+            severity = "critical" if p.quantidade == 0 else "high"
+            if severity == "critical":
+                critical_count += 1
+            else:
+                high_count += 1
+            items.append(
+                {
+                    "id": p.id,
+                    "codigo": p.codigo,
+                    "nome": p.nome,
+                    "categoria": p.categoria,
+                    "quantidade": p.quantidade,
+                    "estoque_minimo": p.estoque_minimo,
+                    "preco": p.preco,
+                    "fornecedor_id": p.fornecedor_id,
+                    "severity": severity,
+                }
+            )
+
+        return {
+            "low_stock_products": items,
+            "total_low_stock": len(items),
+            "critical_count": critical_count,
+            "high_count": high_count,
+        }
     except Exception:
         logger.exception("get low stock insights failed")
         raise _server_error("get low stock insights")

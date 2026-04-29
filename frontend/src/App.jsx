@@ -1,3 +1,4 @@
+// PC-Express — App root (Equipe Big 5). Termos completos em LICENSE/TERMS_OF_USE.md.
 import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { AnimatePresence, motion } from 'framer-motion';

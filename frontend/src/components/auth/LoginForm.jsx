@@ -13,8 +13,6 @@ import { useTranslation } from 'react-i18next';
 import { Link as RouterLink } from 'react-router-dom';
 
 import {
-    DemoCredentials,
-    DemoText,
     GradientButton,
     StyledLink,
     StyledTextField
@@ -158,16 +156,6 @@ const LoginForm = ({ isDark, onSubmit, loading, error }) => {
           </StyledLink>
         </div>
       </form>
-
-      <DemoCredentials $isDark={isDark}>
-        <DemoText $isDark={isDark}>
-          <strong>Demo Credentials:</strong>
-          <br />
-          Email: admin@pc-express.com
-          <br />
-          Password: admin123
-        </DemoText>
-      </DemoCredentials>
     </>
   );
 };

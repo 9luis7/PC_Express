@@ -450,7 +450,7 @@ python -m venv .venv
 # source .venv/bin/activate  # Linux/Mac
 
 # Instalar dependências
-pip install -r requirement.txt
+pip install -r requirements.txt
 
 # Configurar banco
 python scripts/setup_db.py
@@ -623,7 +623,7 @@ CP_Python_PC_Express/
 │   └── migrate_auth.py   # Migração de autenticação
 ├── code-quality/          # Sistema de qualidade de código
 ├── iniciar.bat            # ⭐ Script principal (RECOMENDADO)
-├── requirement.txt        # Dependências Python
+├── requirements.txt        # Dependências Python
 └── README.md              # Este arquivo
 ```
 

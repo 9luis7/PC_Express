@@ -46,7 +46,7 @@ required_files=(
     "docker-compose.yml"
     "Dockerfile.backend"
     "Dockerfile.frontend"
-    "requirement.txt"
+    "requirements.txt"
     "frontend/package.json"
 )
 
