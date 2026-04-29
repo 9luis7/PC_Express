@@ -43,7 +43,10 @@ import { chartColors, formatCurrency } from '../utils/chartUtils';
 import { ChartWrapper, ErrorMessage, ScrollReveal, StatCard } from './common';
 import { DashboardSkeleton } from './common/Skeletons';
 
-export default function Dashboard({ darkMode }) {
+import { useDarkMode } from '../contexts/ThemeContext';
+
+export default function Dashboard() {
+  const { darkMode } = useDarkMode();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [products, setProducts] = useState([]);
@@ -427,7 +430,6 @@ export default function Dashboard({ darkMode }) {
             <ChartWrapper
               title={t('dashboard.websiteTraffic')}
               icon={<Activity size={20} style={{ marginRight: 8, verticalAlign: 'middle' }} />}
-              darkMode={darkMode}
               tooltip="Monitor website traffic metrics including page views, unique visitors, session time, and bounce rate. Track your digital marketing performance and user engagement."
               expanded={false}
               onToggleExpand={() => {}}
@@ -526,7 +528,6 @@ export default function Dashboard({ darkMode }) {
             <ChartWrapper
               title={t('dashboard.productsByCategory')}
               icon={<PieChart size={20} style={{ marginRight: 8, verticalAlign: 'middle' }} />}
-              darkMode={darkMode}
               tooltip="Visualize your product distribution across categories. Click on segments to filter other charts. This helps you understand your product portfolio and identify category gaps."
               expanded={false}
               onToggleExpand={() => {}}
@@ -598,7 +599,6 @@ export default function Dashboard({ darkMode }) {
             <ChartWrapper
               title={t('dashboard.stockLevels')}
               icon={<Package size={20} style={{ marginRight: 8, verticalAlign: 'middle' }} />}
-              darkMode={darkMode}
               tooltip="Monitor current stock levels vs minimum requirements. Click on bars to see product details. This helps prevent stockouts and optimize inventory levels."
               expanded={false}
               onToggleExpand={() => {}}
@@ -929,6 +929,3 @@ export default function Dashboard({ darkMode }) {
   );
 }
 
-Dashboard.propTypes = {
-  darkMode: PropTypes.bool.isRequired
-};

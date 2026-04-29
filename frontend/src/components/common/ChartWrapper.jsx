@@ -1,23 +1,24 @@
 import { Box, Chip, IconButton, Tooltip, Typography } from '@mui/material';
+import { motion } from 'framer-motion';
 import { HelpCircle } from 'lucide-react';
 import PropTypes from 'prop-types';
-import { motion } from 'framer-motion';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { useDarkMode } from '../../contexts/ThemeContext';
 import { getChartTheme } from '../../utils/chartUtils';
 
 export const ChartWrapper = ({
   title,
   icon,
   children,
-  darkMode,
   tooltip,
   expanded,
   onToggleExpand,
   sx = {},
   ...props
 }) => {
+  const { darkMode } = useDarkMode();
   const theme = getChartTheme(darkMode);
   const { t } = useTranslation();
 
@@ -104,7 +105,6 @@ ChartWrapper.propTypes = {
   title: PropTypes.string.isRequired,
   icon: PropTypes.node,
   children: PropTypes.node.isRequired,
-  darkMode: PropTypes.bool.isRequired,
   tooltip: PropTypes.string,
   expanded: PropTypes.bool,
   onToggleExpand: PropTypes.func,

@@ -33,7 +33,10 @@ import { useTranslation } from 'react-i18next';
 import { suppliersAPI } from '../services/api';
 import { ScrollReveal } from './common';
 
-export default function Suppliers({ darkMode }) {
+import { useDarkMode } from '../contexts/ThemeContext';
+
+export default function Suppliers() {
+  const { darkMode } = useDarkMode();
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -253,6 +256,3 @@ export default function Suppliers({ darkMode }) {
   );
 }
 
-Suppliers.propTypes = {
-  darkMode: PropTypes.bool.isRequired
-};

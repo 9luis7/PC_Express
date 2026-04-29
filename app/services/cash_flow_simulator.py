@@ -1,3 +1,4 @@
+import logging
 import random
 from datetime import datetime, timedelta
 from typing import List
@@ -6,22 +7,29 @@ from sqlalchemy.orm import Session
 
 from ..models import MovementType, Product, Sale, SaleItem, StockMovement
 
+logger = logging.getLogger(__name__)
+
 
 class CashFlowSimulator:
     def __init__(self, db: Session):
         self.db = db
 
-    def generate_initial_sales_data(self, days_back: int = 30, user_id: int = None) -> List[Sale]:
-        """Generate initial sales data only if no sales exist - for system setup"""
+    def generate_initial_sales_data(self, days_back: int, user_id: int) -> List[Sale]:
+        """Generate initial sales data only if no sales exist - for system setup.
+
+        user_id é obrigatório para evitar geração cross-tenant.
+        """
+        if not user_id:
+            raise ValueError("user_id is required for generate_initial_sales_data")
+
         try:
-            # Check if sales already exist
             existing_sales = self.db.query(Sale).filter(Sale.user_id == user_id).first()
             if existing_sales:
                 return []  # Don't generate if sales already exist
 
             products = (
                 self.db.query(Product)
-                .filter(Product.quantidade > 0, Product.user_id == user_id if user_id else True)
+                .filter(Product.quantidade > 0, Product.user_id == user_id)
                 .all()
             )
 
@@ -117,7 +125,7 @@ class CashFlowSimulator:
             "headset": 0.9,  # Medium-high demand
         }
 
-        category_factor = category_demand.get(product.categoria.lower(), 1.0)
+        category_factor = category_demand.get((product.categoria or "").lower(), 1.0)
 
         # Stock level factor (more stock = more visibility = more sales)
         stock_factor = min(2.0, product.quantidade / 10) if product.quantidade > 0 else 0

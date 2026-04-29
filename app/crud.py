@@ -1,12 +1,15 @@
+import logging
 from datetime import datetime
 from typing import List, Optional
 
 from fastapi import HTTPException
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session, joinedload
 
 from . import models, schemas
+
+logger = logging.getLogger(__name__)
 
 
 # Suppliers
@@ -277,13 +280,11 @@ def create_purchase_order(
 
 
 def get_purchase_order(db: Session, po_id: int, user_id: int) -> models.PurchaseOrder:
-    from sqlalchemy.orm import joinedload
-
     po = (
         db.query(models.PurchaseOrder)
         .options(
             joinedload(models.PurchaseOrder.items).joinedload(models.PurchaseOrderItem.produto),
-            joinedload(models.PurchaseOrder.fornecedor)
+            joinedload(models.PurchaseOrder.fornecedor),
         )
         .filter(
             models.PurchaseOrder.id == po_id, models.PurchaseOrder.user_id == user_id
@@ -296,27 +297,15 @@ def get_purchase_order(db: Session, po_id: int, user_id: int) -> models.Purchase
 
 
 def get_purchase_order_with_details(db: Session, po_id: int, user_id: int) -> dict:
-    """Get purchase order with product details for API response"""
-    from sqlalchemy.orm import joinedload
+    """PO com detalhes de produto para resposta da API.
 
-    po = (
-        db.query(models.PurchaseOrder)
-        .options(
-            joinedload(models.PurchaseOrder.items).joinedload(models.PurchaseOrderItem.produto),
-            joinedload(models.PurchaseOrder.fornecedor)
-        )
-        .filter(
-            models.PurchaseOrder.id == po_id, models.PurchaseOrder.user_id == user_id
-        )
-        .first()
-    )
-    if not po:
-        raise HTTPException(status_code=404, detail="Pedido de compra não encontrado.")
+    Reusa get_purchase_order (já faz joinedload de items/produto/fornecedor)
+    e apenas serializa para o shape esperado pelo PurchaseOrderOut.
+    """
+    po = get_purchase_order(db, po_id, user_id)
 
-    # Build response with product details
-    items_with_details = []
-    for item in po.items:
-        items_with_details.append({
+    items_with_details = [
+        {
             "id": item.id,
             "produto_id": item.produto_id,
             "quantidade_solicitada": item.quantidade_solicitada,
@@ -324,8 +313,10 @@ def get_purchase_order_with_details(db: Session, po_id: int, user_id: int) -> di
             "preco_unitario": item.preco_unitario,
             "criado_em": item.criado_em,
             "produto_nome": item.produto.nome if item.produto else "Produto não encontrado",
-            "produto_codigo": item.produto.codigo if item.produto else "N/A"
-        })
+            "produto_codigo": item.produto.codigo if item.produto else "N/A",
+        }
+        for item in po.items
+    ]
 
     return {
         "id": po.id,
@@ -438,16 +429,20 @@ def approve_purchase_order(
 
     po.status = models.PurchaseOrderStatus.APPROVED
     po.aprovado_em = datetime.now()
+    db.commit()  # persiste a aprovação primeiro
 
-    # Create a real sale from the approved purchase order
+    # Cria registro de venda derivado da PO aprovada (usado pelo simulador
+    # para alimentar dashboards). Falha de criação da venda NÃO desfaz a
+    # aprovação — apenas é logada. Em transação separada para evitar o
+    # double-commit que existia aqui.
     try:
-        sale = create_sale_from_purchase_order(db, po_id, user_id)
-        print(f"✅ Venda criada: Sale #{sale.id} - R$ {sale.total_value:.2f}")
-    except Exception as e:
-        print(f"❌ Erro ao criar venda: {e}")
-        # Continue with approval even if sale creation fails
+        create_sale_from_purchase_order(db, po_id, user_id)
+    except HTTPException:
+        # erros de validação são esperados e não devem virar 500
+        raise
+    except Exception:
+        logger.exception("Falha ao criar venda derivada da PO #%s", po_id)
 
-    db.commit()
     db.refresh(po)
     return po
 
@@ -569,39 +564,71 @@ def auto_generate_purchase_order(
 
 # Sales CRUD
 def create_sale(db: Session, sale_data: schemas.SaleCreate, user_id: int) -> models.Sale:
-    """Create a new sale and update product stock."""
-    # Create the sale
+    """Create a new sale, validate stock per item, and emit StockMovement OUT.
+
+    Falha (e desfaz) se algum produto não existir/não pertencer ao user, ou se
+    houver estoque insuficiente. Garante consistência entre Sale, SaleItem,
+    StockMovement e Product.quantidade.
+    """
+    # Validar todos os itens antes de mexer em estoque
+    products_by_id: dict[int, models.Product] = {}
+    for item_data in sale_data.items:
+        if item_data.quantidade <= 0:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Quantidade inválida para produto {item_data.produto_id}.",
+            )
+        product = (
+            db.query(models.Product)
+            .filter(
+                models.Product.id == item_data.produto_id,
+                models.Product.user_id == user_id,
+            )
+            .first()
+        )
+        if not product:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Produto {item_data.produto_id} não encontrado.",
+            )
+        if product.quantidade < item_data.quantidade:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"Estoque insuficiente para '{product.nome}': "
+                    f"disponível {product.quantidade}, solicitado {item_data.quantidade}."
+                ),
+            )
+        products_by_id[item_data.produto_id] = product
+
     sale = models.Sale(
         user_id=user_id,
         total_value=sale_data.total_value,
-        status=sale_data.status
+        status=sale_data.status,
     )
     db.add(sale)
-    db.flush()  # To get the sale ID
+    db.flush()  # garante sale.id
 
-    # Create sale items and update stock
     for item_data in sale_data.items:
-        # Create sale item
+        product = products_by_id[item_data.produto_id]
+
         sale_item = models.SaleItem(
             sale_id=sale.id,
             produto_id=item_data.produto_id,
             quantidade=item_data.quantidade,
             preco_unitario=item_data.preco_unitario,
-            preco_total=item_data.preco_total
+            preco_total=item_data.preco_total,
         )
         db.add(sale_item)
 
-        # Update product stock
-        product = db.query(models.Product).filter(
-            models.Product.id == item_data.produto_id,
-            models.Product.user_id == user_id
-        ).first()
-
-        if product:
-            # Reduce stock
-            product.quantidade = max(0, product.quantidade - item_data.quantidade)
-            # Update last sale date
-            product.last_sale_date = datetime.now()
+        product.quantidade -= item_data.quantidade
+        _create_movement(
+            db,
+            product,
+            models.MovementType.OUT,
+            item_data.quantidade,
+            f"Venda #{sale.id}",
+        )
 
     db.commit()
     db.refresh(sale)
@@ -621,8 +648,6 @@ def get_sales(db: Session, user_id: int, limit: int = 100) -> List[models.Sale]:
 
 def get_sale_with_details(db: Session, sale_id: int, user_id: int) -> dict:
     """Get sale with product details for API response."""
-    from sqlalchemy.orm import joinedload
-
     sale = (
         db.query(models.Sale)
         .options(
@@ -662,8 +687,6 @@ def get_sale_with_details(db: Session, sale_id: int, user_id: int) -> dict:
 
 def get_top_selling_products(db: Session, user_id: int, limit: int = 5) -> List[dict]:
     """Get top selling products based on sales data."""
-    from sqlalchemy.orm import joinedload
-
     try:
         # Query to get all sales with their items and products
         sales_with_items = (
@@ -725,8 +748,8 @@ def get_top_selling_products(db: Session, user_id: int, limit: int = 5) -> List[
 
         return product_sales_list[:limit]
 
-    except Exception as e:
-        print(f"Error in get_top_selling_products: {e}")
+    except Exception:
+        logger.exception("Falha em get_top_selling_products; aplicando fallback")
         # Fallback to products by stock value
         products = (
             db.query(models.Product)
@@ -752,8 +775,6 @@ def get_top_selling_products(db: Session, user_id: int, limit: int = 5) -> List[
 
 def create_sale_from_purchase_order(db: Session, po_id: int, user_id: int) -> models.Sale:
     """Create a sale from an approved purchase order."""
-    from sqlalchemy.orm import joinedload
-
     # Get the purchase order with items and products
     po = (
         db.query(models.PurchaseOrder)

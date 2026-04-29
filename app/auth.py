@@ -61,21 +61,22 @@ def verify_token(token: str, credentials_exception: HTTPException) -> TokenData:
 def get_current_user(
     token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
 ) -> User:
-    """Get the current authenticated user."""
+    """Get the current authenticated user.
+
+    Captura apenas erros de validação do token (JWTError via verify_token).
+    Erros de banco/inesperados sobem como 500 — não devem ser mascarados como 401.
+    """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-    try:
-        token_data = verify_token(token, credentials_exception)
-        user = db.query(User).filter(User.email == token_data.email).first()
-        if user is None:
-            raise credentials_exception
-        return user
-    except Exception:
+    token_data = verify_token(token, credentials_exception)
+    user = db.query(User).filter(User.email == token_data.email).first()
+    if user is None:
         raise credentials_exception
+    return user
 
 
 def get_current_active_user(current_user: User = Depends(get_current_user)) -> User:

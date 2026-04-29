@@ -115,30 +115,35 @@ export const AuthProvider = ({ children }) => {
       }
     );
 
-    // Interceptor de retry automático
+    // Interceptor de retry: SÓ erros transitórios — rede sem resposta ou 5xx.
+    // Erros 4xx (validação, not found, conflict, unauthorized) NÃO devem
+    // disparar retry — eles não vão "se resolver" repetindo a request.
+    const MAX_RETRIES = 3;
+    const isRetryable = error => {
+      // Erro de rede (sem response) é retryable
+      if (!error.response) {
+        return true;
+      }
+      const status = error.response.status;
+      return status >= 500 && status < 600;
+    };
+
     const retryInterceptor = api.interceptors.response.use(
       response => response,
       async error => {
         const config = error.config;
-
-        // Se não há config ou já tentou 3 vezes, rejeita
-        if (!config || config.__retryCount >= 3) {
+        if (!config || !isRetryable(error)) {
           return Promise.reject(error);
         }
-
-        // Não fazer retry para erros 401 (autenticação)
-        if (error.response?.status === 401) {
-          return Promise.reject(error);
-        }
-
-        // Incrementa contador de tentativas
         config.__retryCount = config.__retryCount || 0;
+        if (config.__retryCount >= MAX_RETRIES) {
+          return Promise.reject(error);
+        }
         config.__retryCount += 1;
 
-        // Aguarda antes de tentar novamente (backoff exponencial)
+        // Backoff exponencial: 2s, 4s, 8s
         const delay = Math.pow(2, config.__retryCount) * 1000;
         await new Promise(resolve => setTimeout(resolve, delay));
-
         return api(config);
       }
     );

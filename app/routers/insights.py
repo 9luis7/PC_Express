@@ -1,7 +1,8 @@
+import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
@@ -12,7 +13,13 @@ from ..services.cash_flow_simulator import CashFlowSimulator
 from ..services.ml_predictor import MLPredictor
 from ..services.model_registry import list_models, load_model, save_uploaded_model
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/insights", tags=["insights"])
+
+
+def _server_error(action: str) -> HTTPException:
+    """HTTPException 500 com mensagem genérica. Detalhe vai para o log, não para o cliente."""
+    return HTTPException(status_code=500, detail=f"Failed to {action}.")
 
 
 @router.get("/ml/models")
@@ -22,8 +29,9 @@ def get_available_models(
     """List available uploaded models in the server registry"""
     try:
         return {"models": list_models()}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to list models: {str(e)}")
+    except Exception:
+        logger.exception("list_models failed")
+        raise _server_error("list models")
 
 
 @router.post("/ml/models/upload")
@@ -49,9 +57,9 @@ async def upload_model(
         return {"message": "Model uploaded", "name": name, "path": path}
     except HTTPException:
         raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to upload model: {str(e)}")
-
+    except Exception:
+        logger.exception("upload_model failed")
+        raise _server_error("upload model")
 
 
 @router.post("/generate-sales-data")
@@ -77,10 +85,9 @@ def generate_sales_data(
             "sales_count": len(generated_sales),
             "note": "Initial data generated for system setup. Add real sales for better ML insights.",
         }
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to generate initial sales data: {str(e)}"
-        )
+    except Exception:
+        logger.exception("generate_sales_data failed")
+        raise _server_error("generate initial sales data")
 
 
 @router.get("/overview")
@@ -167,8 +174,9 @@ def get_insights_overview(
             },
             "recommendations": _generate_recommendations(products, recent_movements, recent_sales),
         }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get insights overview: {str(e)}")
+    except Exception:
+        logger.exception("get insights overview failed")
+        raise _server_error("get insights overview")
 
 
 @router.get("/product/{product_id}")
@@ -260,8 +268,9 @@ def get_product_insights(
                 product, recent_sales, recent_movements
             ),
         }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get product insights: {str(e)}")
+    except Exception:
+        logger.exception("get product insights failed")
+        raise _server_error("get product insights")
 
 
 @router.get("/low-stock-alerts")
@@ -278,8 +287,9 @@ def get_low_stock_insights(
             "high_count": 0,
         }
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get low stock insights: {str(e)}")
+    except Exception:
+        logger.exception("get low stock insights failed")
+        raise _server_error("get low stock insights")
 
 
 @router.get("/ml/demand-prediction/{product_id}")
@@ -294,8 +304,9 @@ def get_demand_prediction(
         predictor = MLPredictor(db, current_user.id)
         prediction = predictor.predict_demand(product_id, days_ahead)
         return prediction
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get demand prediction: {str(e)}")
+    except Exception:
+        logger.exception("get demand prediction failed")
+        raise _server_error("get demand prediction")
 
 
 @router.get("/ml/price-optimization/{product_id}")
@@ -309,8 +320,9 @@ def get_price_optimization(
         predictor = MLPredictor(db, current_user.id)
         optimization = predictor.optimize_price(product_id)
         return optimization
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get price optimization: {str(e)}")
+    except Exception:
+        logger.exception("get price optimization failed")
+        raise _server_error("get price optimization")
 
 
 @router.get("/ml/anomaly-detection")
@@ -324,8 +336,9 @@ def get_anomaly_detection(
         predictor = MLPredictor(db, current_user.id)
         anomalies = predictor.detect_anomalies(product_id)
         return anomalies
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get anomaly detection: {str(e)}")
+    except Exception:
+        logger.exception("get anomaly detection failed")
+        raise _server_error("get anomaly detection")
 
 
 @router.get("/ml/stock-optimization/{product_id}")
@@ -339,8 +352,9 @@ def get_stock_optimization(
         predictor = MLPredictor(db, current_user.id)
         optimization = predictor.get_stock_optimization(product_id)
         return optimization
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get stock optimization: {str(e)}")
+    except Exception:
+        logger.exception("get stock optimization failed")
+        raise _server_error("get stock optimization")
 
 
 @router.get("/ml/product-insights/{product_id}")
@@ -354,8 +368,9 @@ def get_ml_product_insights(
         predictor = MLPredictor(db, current_user.id)
         insights = predictor.get_product_insights_summary(product_id)
         return insights
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get ML insights: {str(e)}")
+    except Exception:
+        logger.exception("get ML insights failed")
+        raise _server_error("get ML insights")
 
 
 def _generate_recommendations(products, movements, sales):

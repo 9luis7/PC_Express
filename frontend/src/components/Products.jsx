@@ -52,7 +52,10 @@ import { productsAPI, stockAPI, suppliersAPI } from '../services/api.jsx';
 import { TableSkeleton } from './common/Skeletons';
 import { ScrollReveal } from './common';
 
-export default function Products({ darkMode }) {
+import { useDarkMode } from '../contexts/ThemeContext';
+
+export default function Products() {
+  const { darkMode } = useDarkMode();
   const [products, setProducts] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -945,6 +948,3 @@ return 1;
   );
 }
 
-Products.propTypes = {
-  darkMode: PropTypes.bool.isRequired
-};

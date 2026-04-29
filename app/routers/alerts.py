@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from .. import crud, schemas
 from ..auth import get_current_active_user
-from ..deps import get_db
+from ..database import get_db
 from ..models import User
 
 router = APIRouter(prefix="/alerts", tags=["Alerts"])
