@@ -601,7 +601,7 @@ def create_sale(db: Session, sale_data: schemas.SaleCreate, user_id: int) -> mod
             # Reduce stock
             product.quantidade = max(0, product.quantidade - item_data.quantidade)
             # Update last sale date
-            product.last_sale_date = func.now()
+            product.last_sale_date = datetime.now()
 
     db.commit()
     db.refresh(sale)

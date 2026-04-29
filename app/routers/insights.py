@@ -13,8 +13,12 @@ from ..services.ml_predictor import MLPredictor
 from ..services.model_registry import list_models, load_model, save_uploaded_model
 
 router = APIRouter(prefix="/insights", tags=["insights"])
+
+
 @router.get("/ml/models")
-def get_available_models():
+def get_available_models(
+    current_user: User = Depends(get_current_active_user),
+):
     """List available uploaded models in the server registry"""
     try:
         return {"models": list_models()}
@@ -26,8 +30,14 @@ def get_available_models():
 async def upload_model(
     name: str = Form(...),
     file: UploadFile = File(...),
+    current_user: User = Depends(get_current_active_user),
 ):
-    """Upload a serialized model (joblib or pickle) trained externally (e.g., Colab)."""
+    """Upload a serialized model (joblib or pickle) trained externally (e.g., Colab).
+
+    NOTA DE SEGURANÇA: arquivos joblib/pickle podem executar código arbitrário ao
+    serem carregados (`joblib.load`). Endpoint exige autenticação. Em produção,
+    valide origem do arquivo e considere um formato seguro (ONNX, JSON de pesos).
+    """
     try:
         data = await file.read()
         # Accept both joblib and pickle (joblib can load pickle files too)
@@ -270,12 +280,6 @@ def get_low_stock_insights(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get low stock insights: {str(e)}")
-
-
-@router.get("/test-simple")
-def test_simple_endpoint(current_user: User = Depends(get_current_active_user)):
-    """Simple test endpoint"""
-    return {"message": "Test endpoint working", "user": current_user.email}
 
 
 @router.get("/ml/demand-prediction/{product_id}")

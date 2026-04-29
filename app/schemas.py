@@ -1,5 +1,4 @@
-from datetime import datetime, timedelta
-from enum import Enum
+from datetime import datetime
 from typing import List, Optional
 
 from pydantic import (
@@ -10,6 +9,11 @@ from pydantic import (
     NonNegativeInt,
     PositiveInt,
 )
+
+# Enums vêm de models.py (única fonte da verdade)
+from .models import MovementType, PurchaseOrderStatus, SaleStatus
+
+__all__ = ["MovementType", "PurchaseOrderStatus", "SaleStatus"]
 
 
 # Authentication Schemas
@@ -36,25 +40,6 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     email: Optional[str] = None
-
-
-class MovementType(str, Enum):
-    IN = "IN"
-    OUT = "OUT"
-    ADJUST = "ADJUST"
-
-
-class PurchaseOrderStatus(str, Enum):
-    DRAFT = "DRAFT"
-    PENDING_APPROVAL = "PENDING_APPROVAL"
-    APPROVED = "APPROVED"
-    CANCELLED = "CANCELLED"
-
-
-class SaleStatus(str, Enum):
-    COMPLETED = "COMPLETED"
-    CANCELLED = "CANCELLED"
-    REFUNDED = "REFUNDED"
 
 
 # Supplier

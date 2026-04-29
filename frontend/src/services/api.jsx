@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -19,15 +19,7 @@ export const productsAPI = {
   create: data => api.post('/products', data),
   update: (id, data) => api.put(`/products/${id}`, data),
   delete: id => api.delete(`/products/${id}`),
-  getLowStock: () => api.get('/products/low-stock'),
-  // New Analytics endpoints
-  getAnalytics: id => api.get(`/products/${id}/analytics`),
-  getInsights: id => api.get(`/products/${id}/insights`),
-  getAllAnalytics: () => api.get('/products/analytics/all'),
-  getAllInsights: () => api.get('/products/insights/all'),
-  getReorderNeeded: () => api.get('/products/analytics/reorder-needed'),
-  getDeadStock: () => api.get('/products/insights/dead-stock'),
-  getSlowMoving: () => api.get('/products/insights/slow-moving')
+  getLowStock: () => api.get('/products/low-stock')
 };
 
 // Suppliers API

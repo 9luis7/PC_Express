@@ -2,7 +2,7 @@ import Cookies from 'js-cookie';
 
 // Configurações de segurança para cookies
 const COOKIE_OPTIONS = {
-  secure: process.env.NODE_ENV === 'production', // HTTPS apenas em produção
+  secure: import.meta.env.PROD, // HTTPS apenas em produção (Vite)
   sameSite: 'strict', // Proteção CSRF
   expires: 7, // 7 dias
   path: '/'
@@ -132,23 +132,12 @@ export const isSessionValid = () => {
     const lastActivity = Cookies.get(AUTH_KEYS.LAST_ACTIVITY);
     const token = getAuthToken();
 
-    console.log('Verificando sessão:');
-    console.log('- Token existe:', !!token);
-    console.log('- Última atividade existe:', !!lastActivity);
-
     if (!token || !lastActivity) {
-      console.log('- Sessão inválida: token ou atividade ausente');
       return false;
     }
 
     const timeSinceLastActivity = Date.now() - parseInt(lastActivity);
-    const isValid = timeSinceLastActivity < SESSION_TIMEOUT;
-
-    console.log('- Tempo desde última atividade:', Math.round(timeSinceLastActivity / 1000), 'segundos');
-    console.log('- Timeout da sessão:', Math.round(SESSION_TIMEOUT / 1000), 'segundos');
-    console.log('- Sessão válida:', isValid);
-
-    return isValid;
+    return timeSinceLastActivity < SESSION_TIMEOUT;
   } catch (error) {
     console.error('Erro ao verificar sessão:', error);
     return false;

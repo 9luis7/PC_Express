@@ -1,11 +1,4 @@
-from typing import Generator
+# Re-export para evitar duplicação. Fonte da verdade: app/database.py
+from .database import get_db
 
-from .database import SessionLocal
-
-
-def get_db() -> Generator:
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+__all__ = ["get_db"]
