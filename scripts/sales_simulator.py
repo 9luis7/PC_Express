@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-"""
-Sales Simulator for PC-Express
-Simula vendas aleatórias criando purchase orders automaticamente
-"""
+"""Simulador de vendas: cria purchase orders aleatórias no PC-Express."""
 
 import asyncio
+import logging
 import random
 import time
 from datetime import datetime
@@ -18,6 +16,9 @@ from app.models import (
     PurchaseOrderStatus,
     Supplier,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class SalesSimulator:
@@ -107,83 +108,82 @@ class SalesSimulator:
 
     async def run_simulation(self, duration_minutes: int = 10):
         """Executa a simulação por um período determinado"""
-        print(f"🚀 Iniciando simulação de vendas por {duration_minutes} minutos...")
-        print(f"📊 Configurações:")
-        print(f"   - Máximo de POs pendentes: {self.max_pending_orders}")
-        print(f"   - Intervalo entre vendas: {self.min_interval}-{self.max_interval}s")
-        print(f"   - Duração: {duration_minutes} minutos")
-        print("=" * 50)
+        logger.info(
+            "Iniciando simulação por %d min (max_pending=%d, intervalo=%d-%ds)",
+            duration_minutes,
+            self.max_pending_orders,
+            self.min_interval,
+            self.max_interval,
+        )
 
         self.is_running = True
         start_time = time.time()
         end_time = start_time + (duration_minutes * 60)
         orders_created = 0
+        interval = self.min_interval
 
         try:
             while self.is_running and time.time() < end_time:
                 db = SessionLocal()
                 try:
-                    # Verifica se pode criar mais vendas
                     pending_count = self.get_pending_orders_count(db)
 
                     if pending_count < self.max_pending_orders:
-                        # Cria uma nova venda
                         po = self.create_random_purchase_order(db)
                         if po:
                             db.commit()
                             orders_created += 1
-                            print(
-                                f"✅ Venda #{orders_created} criada - PO #{po.id} - R$ {po.total_value:.2f} - {po.observacoes}"
+                            logger.info(
+                                "Venda #%d criada — PO #%s — R$ %.2f",
+                                orders_created,
+                                po.id,
+                                po.total_value,
                             )
                         else:
-                            print(
-                                "⚠️  Não foi possível criar venda (sem produtos/fornecedores)"
+                            logger.warning(
+                                "Não foi possível criar venda (sem produtos/fornecedores)"
                             )
                     else:
-                        print(
-                            f"⏸️  Aguardando aprovação de vendas... ({pending_count}/{self.max_pending_orders} pendentes)"
+                        logger.info(
+                            "Aguardando aprovação (%d/%d pendentes)",
+                            pending_count,
+                            self.max_pending_orders,
                         )
 
-                    # Intervalo aleatório até a próxima venda
                     interval = random.randint(self.min_interval, self.max_interval)
-                    print(f"⏰ Próxima venda em {interval} segundos...")
+                    logger.debug("Próxima venda em %ds", interval)
 
-                except Exception as e:
-                    print(f"❌ Erro ao criar venda: {e}")
+                except Exception:
+                    logger.exception("Erro ao criar venda na simulação")
                     db.rollback()
                 finally:
                     db.close()
 
-                # Aguarda o intervalo
                 await asyncio.sleep(interval)
 
         except KeyboardInterrupt:
-            print("\n🛑 Simulação interrompida pelo usuário")
+            logger.info("Simulação interrompida pelo usuário")
 
         self.is_running = False
         elapsed_time = (time.time() - start_time) / 60
-        print("=" * 50)
-        print(f"🏁 Simulação finalizada!")
-        print(f"📈 Estatísticas:")
-        print(f"   - Tempo decorrido: {elapsed_time:.1f} minutos")
-        print(f"   - Vendas criadas: {orders_created}")
-        print(f"   - Vendas pendentes: {self.get_pending_orders_count(SessionLocal())}")
+        logger.info(
+            "Simulação finalizada — %.1f min decorridos, %d vendas criadas",
+            elapsed_time,
+            orders_created,
+        )
 
     def stop_simulation(self):
         """Para a simulação"""
         self.is_running = False
-        print("🛑 Parando simulação...")
+        logger.info("Parando simulação...")
 
 
 async def main():
     """Função principal para executar a simulação"""
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     simulator = SalesSimulator()
 
-    print("🎯 Simulador de Vendas PC-Express")
-    print("=" * 40)
-
     try:
-        # Executa por 10 minutos por padrão
         await simulator.run_simulation(duration_minutes=10)
     except KeyboardInterrupt:
         simulator.stop_simulation()

@@ -2,7 +2,7 @@ import Cookies from 'js-cookie';
 
 // Configurações de segurança para cookies
 const COOKIE_OPTIONS = {
-  secure: process.env.NODE_ENV === 'production', // HTTPS apenas em produção
+  secure: import.meta.env.PROD, // HTTPS apenas em produção (Vite)
   sameSite: 'strict', // Proteção CSRF
   expires: 7, // 7 dias
   path: '/'
@@ -132,23 +132,12 @@ export const isSessionValid = () => {
     const lastActivity = Cookies.get(AUTH_KEYS.LAST_ACTIVITY);
     const token = getAuthToken();
 
-    console.log('Verificando sessão:');
-    console.log('- Token existe:', !!token);
-    console.log('- Última atividade existe:', !!lastActivity);
-
     if (!token || !lastActivity) {
-      console.log('- Sessão inválida: token ou atividade ausente');
       return false;
     }
 
     const timeSinceLastActivity = Date.now() - parseInt(lastActivity);
-    const isValid = timeSinceLastActivity < SESSION_TIMEOUT;
-
-    console.log('- Tempo desde última atividade:', Math.round(timeSinceLastActivity / 1000), 'segundos');
-    console.log('- Timeout da sessão:', Math.round(SESSION_TIMEOUT / 1000), 'segundos');
-    console.log('- Sessão válida:', isValid);
-
-    return isValid;
+    return timeSinceLastActivity < SESSION_TIMEOUT;
   } catch (error) {
     console.error('Erro ao verificar sessão:', error);
     return false;
@@ -210,10 +199,17 @@ export const detectHardRefresh = () => {
 };
 
 /**
- * Monitora a atividade do usuário para manter a sessão ativa
+ * Monitora a atividade do usuário para manter a sessão ativa.
+ *
+ * Throttle de 30s na escrita do cookie de atividade — antes, qualquer
+ * mousemove disparava escrita de cookie e reset de timer. Removemos
+ * mousemove (ruidoso) e mantemos eventos discretos que indicam interação real.
  */
+const ACTIVITY_THROTTLE_MS = 30 * 1000;
+
 export const startActivityMonitor = (onSessionExpired) => {
   let activityTimer;
+  let lastActivityWrite = 0;
 
   const resetTimer = () => {
     if (activityTimer) {
@@ -227,29 +223,30 @@ export const startActivityMonitor = (onSessionExpired) => {
     }, SESSION_TIMEOUT);
   };
 
-  // Eventos que indicam atividade do usuário
-  const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+  const activityEvents = ['mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
 
   const handleActivity = () => {
+    const now = Date.now();
+    if (now - lastActivityWrite < ACTIVITY_THROTTLE_MS) {
+      return; // throttle: evita escrita de cookie a cada evento
+    }
+    lastActivityWrite = now;
     updateLastActivity();
     resetTimer();
   };
 
-  // Adiciona listeners para os eventos
   activityEvents.forEach(event => {
-    document.addEventListener(event, handleActivity, true);
+    document.addEventListener(event, handleActivity, { passive: true });
   });
 
-  // Inicia o timer
   resetTimer();
 
-  // Retorna função para limpar os listeners
   return () => {
     if (activityTimer) {
       clearTimeout(activityTimer);
     }
     activityEvents.forEach(event => {
-      document.removeEventListener(event, handleActivity, true);
+      document.removeEventListener(event, handleActivity);
     });
   };
 };

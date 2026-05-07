@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -5,6 +7,7 @@ from ..auth import get_current_active_user
 from ..database import get_db
 from ..models import MovementType, Product, StockMovement, Supplier, User
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/auto-restock", tags=["auto-restock"])
 
 
@@ -125,10 +128,9 @@ def get_stock_analysis(
                 ]
             ),
         }
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to analyze stock: {str(e)}"
-        )
+    except Exception:
+        logger.exception("analyze stock failed")
+        raise HTTPException(status_code=500, detail="Failed to analyze stock.")
 
 
 @router.post("/restock-all")
@@ -187,11 +189,10 @@ def restock_all_products(
             "total_value": total_value,
             "products_restocked": len(restocked_products),
         }
-    except Exception as e:
+    except Exception:
         db.rollback()
-        raise HTTPException(
-            status_code=500, detail=f"Failed to restock products: {str(e)}"
-        )
+        logger.exception("restock products failed")
+        raise HTTPException(status_code=500, detail="Failed to restock products.")
 
 
 @router.post("/restock-product/{product_id}")
@@ -246,8 +247,7 @@ def restock_single_product(
                 "cost": restock_needed * product.preco,
             },
         }
-    except Exception as e:
+    except Exception:
         db.rollback()
-        raise HTTPException(
-            status_code=500, detail=f"Failed to restock product: {str(e)}"
-        )
+        logger.exception("restock product failed")
+        raise HTTPException(status_code=500, detail="Failed to restock product.")

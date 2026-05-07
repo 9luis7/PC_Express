@@ -134,7 +134,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
    ```bash
    # Python
    python -m venv .venv
-   .venv\Scripts\python.exe -m pip install -r requirement.txt
+   .venv\Scripts\python.exe -m pip install -r requirements.txt
    
    # Node.js
    cd frontend

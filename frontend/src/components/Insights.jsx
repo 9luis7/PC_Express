@@ -78,17 +78,12 @@ export default function Insights() {
       setLoading(true);
       setError(null);
 
-      // Fetch overview insights
-      const overviewResponse = await insightsAPI.getOverview();
+      const [overviewResponse, lowStockResponse] = await Promise.all([
+        insightsAPI.getOverview(),
+        insightsAPI.getLowStockAlerts()
+      ]);
       setOverview(overviewResponse.data);
-
-      // Temporarily skip low stock alerts due to backend issue
-      setLowStockAlerts({
-        low_stock_products: [],
-        total_low_stock: 0,
-        critical_count: 0,
-        high_count: 0
-      });
+      setLowStockAlerts(lowStockResponse.data);
     } catch (error) {
       setError(
         `Failed to load insights data: ${error.response?.data?.detail || error.message || 'Unknown error'}`

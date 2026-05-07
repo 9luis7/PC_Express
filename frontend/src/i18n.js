@@ -20,16 +20,17 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    fallbackLng: 'en',
+    fallbackLng: 'pt',
+    supportedLngs: ['pt', 'en'],
+    nonExplicitSupportedLngs: true, // 'pt-BR' resolve para 'pt'
     debug: false,
-
     interpolation: {
       escapeValue: false // React já escapa por padrão
     },
-
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],
-      caches: ['localStorage']
+      caches: ['localStorage'],
+      lookupLocalStorage: 'i18nextLng'
     }
   });
 

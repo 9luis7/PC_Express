@@ -11,7 +11,6 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import {
-  Activity,
   AlertTriangle,
   HelpCircle,
   Package,
@@ -40,10 +39,13 @@ import {
 import { alertsAPI, productsAPI, salesAPI, suppliersAPI } from '../services/api.jsx';
 import { chartColors, formatCurrency } from '../utils/chartUtils';
 
-import { ChartWrapper, ErrorMessage, ScrollReveal, StatCard } from './common';
+import { ChartWrapper, EmptyState, ErrorMessage, ScrollReveal, StatCard } from './common';
 import { DashboardSkeleton } from './common/Skeletons';
 
-export default function Dashboard({ darkMode }) {
+import { useDarkMode } from '../contexts/ThemeContext';
+
+export default function Dashboard() {
+  const { darkMode } = useDarkMode();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [products, setProducts] = useState([]);
@@ -163,82 +165,34 @@ export default function Dashboard({ darkMode }) {
     }, 0)
   };
 
-  // Website Traffic Data
-  const websiteTrafficData = [
-    {
-      metric: t('dashboard.pageViews'),
-      value: 20500,
-      target: 25000,
-      color: chartColors.primary,
-      icon: '📊'
-    },
-    {
-      metric: t('dashboard.uniqueVisitors'),
-      value: 12450,
-      target: 15000,
-      color: chartColors.success,
-      icon: '👥'
-    },
-    {
-      metric: t('dashboard.avgSessionTime'),
-      value: 4.2,
-      target: 5.0,
-      color: chartColors.warning,
-      icon: '⏱️',
-      unit: 'min'
-    },
-    {
-      metric: t('dashboard.bounceRate'),
-      value: 32.5,
-      target: 25.0,
-      color: chartColors.error,
-      icon: '📉',
-      unit: '%'
-    }
-  ];
+  const hasProducts = products.length > 0;
 
-  const categoryData =
-    products.length > 0
-      ? Object.entries(
-          products.reduce((acc, product) => {
-            acc[product.categoria] = (acc[product.categoria] || 0) + 1;
-            return acc;
-          }, {})
-        ).map(([name, value], index) => ({
-          name,
-          value,
-          color: chartColors.chartColors[index % chartColors.chartColors.length]
-        }))
-      : [
-          { name: 'Processors', value: 5, color: chartColors.chartColors[0] },
-          { name: 'Graphics Cards', value: 3, color: chartColors.chartColors[1] },
-          { name: 'Memory', value: 4, color: chartColors.chartColors[2] },
-          { name: 'Storage', value: 6, color: chartColors.chartColors[3] }
-        ];
+  const categoryData = hasProducts
+    ? Object.entries(
+        products.reduce((acc, product) => {
+          const key = product.categoria || t('common.uncategorized');
+          acc[key] = (acc[key] || 0) + 1;
+          return acc;
+        }, {})
+      ).map(([name, value], index) => ({
+        name,
+        value,
+        color: chartColors.chartColors[index % chartColors.chartColors.length]
+      }))
+    : [];
 
-  // Stock Levels Data
-  const stockLevelsData =
-    products.length > 0
-      ? products.slice(0, 8).map(product => ({
-          name: product.nome.length > 15 ? `${product.nome.substring(0, 15)}...` : product.nome,
-          current: product.quantidade,
-          minimum: product.estoque_minimo,
-          color:
-            product.quantidade <= product.estoque_minimo ? chartColors.error : chartColors.success
-        }))
-      : [
-          { name: 'AMD Ryzen 7 5800X', current: 15, minimum: 5, color: chartColors.success },
-          { name: 'NVIDIA RTX 3080', current: 3, minimum: 5, color: chartColors.error },
-          { name: 'Samsung 970 EVO 1TB', current: 25, minimum: 10, color: chartColors.success },
-          { name: 'Corsair Vengeance 16GB', current: 8, minimum: 15, color: chartColors.error },
-          { name: 'ASUS ROG Strix B550', current: 12, minimum: 8, color: chartColors.success },
-          { name: 'Seagate Barracuda 2TB', current: 18, minimum: 12, color: chartColors.success },
-          { name: 'EVGA 750W Gold', current: 6, minimum: 10, color: chartColors.error },
-          { name: 'Logitech G Pro X', current: 22, minimum: 15, color: chartColors.success }
-        ];
+  const stockLevelsData = hasProducts
+    ? products.slice(0, 8).map(product => ({
+        name: product.nome.length > 15 ? `${product.nome.substring(0, 15)}...` : product.nome,
+        current: product.quantidade,
+        minimum: product.estoque_minimo,
+        color:
+          product.quantidade <= product.estoque_minimo ? chartColors.error : chartColors.success
+      }))
+    : [];
 
-  // Top Performing Products Data
-  // Top Performing Products Data - Now based on real sales data
+  // Top performing products: vendas reais > fallback ranking por valor de
+  // estoque (preço × quantidade). Sem mocks: vazio é vazio.
   const topProductsData = topProducts.length > 0
     ? topProducts.map((product, index) => ({
         name: product.nome,
@@ -249,7 +203,7 @@ export default function Dashboard({ darkMode }) {
         quantitySold: product.total_quantity_sold,
         color: chartColors.chartColors[index % chartColors.chartColors.length]
       }))
-    : products.length > 0
+    : hasProducts
       ? products
           .sort((a, b) => b.preco * b.quantidade - a.preco * a.quantidade)
           .slice(0, 5)
@@ -262,53 +216,7 @@ export default function Dashboard({ darkMode }) {
             quantitySold: 0,
             color: chartColors.chartColors[index % chartColors.chartColors.length]
           }))
-      : [
-          {
-            name: 'AMD Ryzen 7 5800X',
-            code: 'PROC-001',
-            value: 15999.0,
-            stock: 10,
-            price: 1599.9,
-            quantitySold: 0,
-            color: chartColors.chartColors[0]
-          },
-          {
-            name: 'NVIDIA RTX 4060 8GB',
-            code: 'GPU-001',
-            value: 21999.0,
-            stock: 10,
-            price: 2199.9,
-            quantitySold: 0,
-            color: chartColors.chartColors[1]
-          },
-          {
-            name: 'SSD NVMe 1TB Kingston',
-            code: 'SSD-001',
-            value: 4299.0,
-            stock: 10,
-            price: 429.9,
-            quantitySold: 0,
-            color: chartColors.chartColors[2]
-          },
-          {
-            name: 'Monitor 24" 144Hz',
-            code: 'MON-001',
-            value: 8999.0,
-            stock: 10,
-            price: 899.9,
-            quantitySold: 0,
-            color: chartColors.chartColors[3]
-          },
-          {
-            name: 'Teclado Mecânico RGB',
-            code: 'KB-001',
-            value: 2999.0,
-            stock: 10,
-            price: 299.9,
-            quantitySold: 0,
-            color: chartColors.chartColors[4]
-          }
-        ];
+      : [];
 
   return (
     <Box>
@@ -420,113 +328,26 @@ export default function Dashboard({ darkMode }) {
         </Grid>
       </Grid>
 
+      {!hasProducts && (
+        <ScrollReveal direction="up" delay={0.2}>
+          <EmptyState
+            icon={Package}
+            title={t('dashboard.emptyTitle')}
+            description={t('dashboard.emptyDescription')}
+            actionLabel={t('common.products')}
+            onAction={() => navigate('/products')}
+            sx={{ mb: 4 }}
+          />
+        </ScrollReveal>
+      )}
+
       {/* Charts Grid */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid size={{ xs: 12, lg: 5 }}>
-          <ScrollReveal direction="left" delay={0.2}>
-            <ChartWrapper
-              title={t('dashboard.websiteTraffic')}
-              icon={<Activity size={20} style={{ marginRight: 8, verticalAlign: 'middle' }} />}
-              darkMode={darkMode}
-              tooltip="Monitor website traffic metrics including page views, unique visitors, session time, and bounce rate. Track your digital marketing performance and user engagement."
-              expanded={false}
-              onToggleExpand={() => {}}
-              data-tour="website-traffic"
-            >
-            <Box sx={{ p: 1 }}>
-              <Grid container spacing={1}>
-                {websiteTrafficData.map((item) => (
-                  <Grid size={{ xs: 6 }} key={`traffic-${item.metric}`}>
-                    <Card
-                      sx={{
-                        p: 1.5,
-                        background: `linear-gradient(135deg, ${item.color}15 0%, ${item.color}08 100%)`,
-                        border: `1px solid ${item.color}30`,
-                        borderRadius: 2,
-                        transition: 'all 0.3s ease',
-                        minHeight: '120px',
-                        '&:hover': {
-                          transform: 'translateY(-2px)',
-                          boxShadow: `0 4px 20px ${item.color}20`
-                        }
-                      }}
-                    >
-                      <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.5}>
-                        <Typography variant="h6" sx={{ color: item.color, fontSize: '1.2rem' }}>
-                          {item.icon}
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          sx={{ color: darkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)', fontSize: '0.7rem' }}
-                        >
-                          {item.metric}
-                        </Typography>
-                      </Box>
-
-                      <Typography
-                        variant="h5"
-                        fontWeight="bold"
-                        sx={{ color: darkMode ? '#ffffff' : '#000000', mb: 0.3, fontSize: '1.4rem' }}
-                      >
-                        {item.value >= 1000 ? `${(item.value / 1000).toFixed(1)}k` : item.value}
-                        {item.unit || ''}
-                      </Typography>
-
-                      <Box display="flex" alignItems="center" gap={1} mb={0.5}>
-                        <Typography
-                          variant="caption"
-                          sx={{ color: darkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)', fontSize: '0.7rem' }}
-                        >
-                          Target:{' '}
-                          {item.target >= 1000
-                            ? `${(item.target / 1000).toFixed(1)}k`
-                            : item.target}
-                          {item.unit || ''}
-                        </Typography>
-                      </Box>
-
-                      <LinearProgress
-                        variant="determinate"
-                        value={(item.value / item.target) * 100}
-                        sx={{
-                          height: 4,
-                          borderRadius: 2,
-                          backgroundColor: `${item.color}20`,
-                          '& .MuiLinearProgress-bar': {
-                            background: item.color,
-                            borderRadius: 2
-                          }
-                        }}
-                      />
-
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          color:
-                            item.value >= item.target ? chartColors.success : chartColors.warning,
-                          fontWeight: 'bold',
-                          mt: 0.3,
-                          display: 'block',
-                          fontSize: '0.7rem'
-                        }}
-                      >
-                        {item.value >= item.target ? '✅ On Track' : '⚠️ Below Target'}
-                      </Typography>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            </Box>
-          </ChartWrapper>
-          </ScrollReveal>
-        </Grid>
-
-        <Grid size={{ xs: 12, lg: 3.5 }}>
+        <Grid size={{ xs: 12, lg: 6 }}>
           <ScrollReveal direction="up" delay={0.3}>
             <ChartWrapper
               title={t('dashboard.productsByCategory')}
               icon={<PieChart size={20} style={{ marginRight: 8, verticalAlign: 'middle' }} />}
-              darkMode={darkMode}
               tooltip="Visualize your product distribution across categories. Click on segments to filter other charts. This helps you understand your product portfolio and identify category gaps."
               expanded={false}
               onToggleExpand={() => {}}
@@ -593,12 +414,11 @@ export default function Dashboard({ darkMode }) {
           </ScrollReveal>
         </Grid>
 
-        <Grid size={{ xs: 12, lg: 3.5 }}>
+        <Grid size={{ xs: 12, lg: 6 }}>
           <ScrollReveal direction="right" delay={0.4}>
             <ChartWrapper
               title={t('dashboard.stockLevels')}
               icon={<Package size={20} style={{ marginRight: 8, verticalAlign: 'middle' }} />}
-              darkMode={darkMode}
               tooltip="Monitor current stock levels vs minimum requirements. Click on bars to see product details. This helps prevent stockouts and optimize inventory levels."
               expanded={false}
               onToggleExpand={() => {}}
@@ -929,6 +749,3 @@ export default function Dashboard({ darkMode }) {
   );
 }
 
-Dashboard.propTypes = {
-  darkMode: PropTypes.bool.isRequired
-};

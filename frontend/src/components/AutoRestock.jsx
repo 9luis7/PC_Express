@@ -36,7 +36,10 @@ import { useTranslation } from 'react-i18next';
 import { autoRestockAPI } from '../services/api.jsx';
 import { ScrollReveal } from './common';
 
-export default function AutoRestock({ darkMode }) {
+import { useDarkMode } from '../contexts/ThemeContext';
+
+export default function AutoRestock() {
+  const { darkMode } = useDarkMode();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [stockAnalysis, setStockAnalysis] = useState(null);
@@ -623,6 +626,3 @@ export default function AutoRestock({ darkMode }) {
   );
 }
 
-AutoRestock.propTypes = {
-  darkMode: PropTypes.bool.isRequired
-};

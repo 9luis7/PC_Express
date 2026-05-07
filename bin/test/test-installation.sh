@@ -63,7 +63,7 @@ run_test "Verificar Node.js" "node --version"
 run_test "Verificar npm" "npm --version"
 
 # Teste 4: Verificar arquivos necessários
-run_test "Verificar requirement.txt" "test -f requirement.txt"
+run_test "Verificar requirements.txt" "test -f requirements.txt"
 
 # Teste 5: Verificar package.json
 run_test "Verificar package.json" "test -f frontend/package.json"
@@ -93,7 +93,7 @@ run_test "Verificar Node.js" "node -e 'console.log(\"Node.js funcionando\")'"
 run_test "Verificar npm install" "cd frontend && npm install --dry-run"
 
 # Teste 14: Verificar se pip pode instalar
-run_test "Verificar pip install" "pip3 install --dry-run -r requirement.txt"
+run_test "Verificar pip install" "pip3 install --dry-run -r requirements.txt"
 
 # Teste 15: Verificar se Docker está disponível (opcional)
 if command -v docker &> /dev/null; then

@@ -38,7 +38,7 @@ REM Teste 3: Verificar npm
 call :run_test "Verificar npm" "npm --version"
 
 REM Teste 4: Verificar arquivos necessários
-call :run_test "Verificar requirement.txt" "if exist requirement.txt echo OK"
+call :run_test "Verificar requirements.txt" "if exist requirements.txt echo OK"
 
 REM Teste 5: Verificar package.json
 call :run_test "Verificar package.json" "if exist frontend\package.json echo OK"
@@ -68,7 +68,7 @@ REM Teste 13: Verificar se npm pode instalar
 call :run_test "Verificar npm install" "cd frontend && npm install --dry-run"
 
 REM Teste 14: Verificar se pip pode instalar
-call :run_test "Verificar pip install" "pip install --dry-run -r requirement.txt"
+call :run_test "Verificar pip install" "pip install --dry-run -r requirements.txt"
 
 REM Teste 15: Verificar se Docker está disponível (opcional)
 docker --version >nul 2>&1

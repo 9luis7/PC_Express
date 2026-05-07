@@ -1,5 +1,5 @@
 import { useTheme } from '@mui/material';
-import PropTypes from 'prop-types';
+import { AnimatePresence, motion } from 'framer-motion';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -7,12 +7,11 @@ import { useAuth } from '../../contexts/AuthContext';
 
 import LoginBackground from './LoginBackground';
 import LoginCard from './LoginCard';
-import { AnimatePresence, motion } from 'framer-motion';
 import LoginLeftPanel from './LoginLeftPanel';
 import { LoginWrapper, RightPanel } from './LoginStyles';
 import TeamMembers from './TeamMembers';
 
-const Login = ({ onToggleDarkMode }) => {
+const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { login } = useAuth();
@@ -59,10 +58,6 @@ const Login = ({ onToggleDarkMode }) => {
       </LoginWrapper>
     </LoginBackground>
   );
-};
-
-Login.propTypes = {
-  onToggleDarkMode: PropTypes.func.isRequired
 };
 
 export default Login;

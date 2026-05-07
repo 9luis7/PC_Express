@@ -6,7 +6,7 @@ Obrigado por contribuir! Siga as diretrizes abaixo para manter o repositório or
 
 - Backend (Python 3.11+)
   - `python -m venv .venv`
-  - Ative o ambiente virtual e instale: `pip install -r requirement.txt`
+  - Ative o ambiente virtual e instale: `pip install -r requirements.txt`
   - Desenvolvimento: `uvicorn app.main:app --reload`
 - Frontend (Node 18 LTS)
   - `cd frontend`

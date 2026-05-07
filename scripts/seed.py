@@ -1,17 +1,20 @@
+import logging
+
 from app import models
 from app.database import SessionLocal
+
+logger = logging.getLogger(__name__)
 
 
 def run():
     db = SessionLocal()
     try:
-        # Get the first user (admin user)
         user = db.query(models.User).first()
         if not user:
-            print("❌ No users found. Please create a user first.")
+            logger.error("Nenhum usuário encontrado. Crie um usuário primeiro.")
             return
 
-        print(f"✅ Using user: {user.email}")
+        logger.info("Seed para usuário: %s", user.email)
 
         # Fornecedores
         forn1 = models.Supplier(
@@ -328,11 +331,11 @@ def run():
         db.add_all(produtos)
         db.commit()
 
-        print("Seed concluído com sucesso.")
-        print(f"Criados {len(produtos)} produtos com preços realistas.")
+        logger.info("Seed concluído: %d produtos criados.", len(produtos))
     finally:
         db.close()
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     run()

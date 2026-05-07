@@ -48,15 +48,15 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useDarkMode } from '../contexts/ThemeContext';
 import { useTour } from '../contexts/TourContext';
 
 import AppTour from './Tour/Tour';
-// Interactive cursor removido conforme solicitação
-
 
 const drawerWidth = 0; // No left sidebar
 
-export default function Layout({ children, darkMode, onToggleDarkMode }) {
+export default function Layout({ children }) {
+  const { darkMode, toggleDarkMode } = useDarkMode();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
@@ -299,7 +299,7 @@ export default function Layout({ children, darkMode, onToggleDarkMode }) {
 
             {/* Dark Mode Toggle */}
             <IconButton
-              onClick={onToggleDarkMode}
+              onClick={toggleDarkMode}
               sx={{
                 color: 'white',
                 '&:hover': {
@@ -444,7 +444,7 @@ export default function Layout({ children, darkMode, onToggleDarkMode }) {
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <FormControlLabel
-              control={<Switch checked={darkMode} onChange={onToggleDarkMode} color="primary" />}
+              control={<Switch checked={darkMode} onChange={toggleDarkMode} color="primary" />}
               label={t('common.darkMode')}
             />
             <FormControl fullWidth>
@@ -486,7 +486,5 @@ export default function Layout({ children, darkMode, onToggleDarkMode }) {
 }
 
 Layout.propTypes = {
-  children: PropTypes.node.isRequired,
-  darkMode: PropTypes.bool.isRequired,
-  onToggleDarkMode: PropTypes.func.isRequired
+  children: PropTypes.node.isRequired
 };

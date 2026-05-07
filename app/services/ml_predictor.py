@@ -19,7 +19,7 @@ from typing import Dict, List, Optional, Tuple
 from sqlalchemy import and_, func, text
 from sqlalchemy.orm import Session
 
-from ..models import MovementType, Product, Sale, SaleItem, StockMovement
+from ..models import MovementType, Product, Sale, SaleItem, SaleStatus, StockMovement
 
 
 class MLPredictor:
@@ -57,7 +57,7 @@ class MLPredictor:
                 and_(
                     Sale.user_id == self.user_id,
                     Sale.criado_em >= start_date,
-                    Sale.status == "COMPLETED",
+                    Sale.status == SaleStatus.COMPLETED,
                 )
             )
         )

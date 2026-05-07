@@ -51,7 +51,10 @@ import React, { useEffect, useState } from 'react';
 import { insightsAPI, purchaseOrdersAPI, simulationAPI, suppliersAPI } from '../services/api.jsx';
 import { ScrollReveal } from './common';
 
-export default function PurchaseOrders({ darkMode }) {
+import { useDarkMode } from '../contexts/ThemeContext';
+
+export default function PurchaseOrders() {
+  const { darkMode } = useDarkMode();
   const [purchaseOrders, setPurchaseOrders] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1043,6 +1046,3 @@ return;
   );
 }
 
-PurchaseOrders.propTypes = {
-  darkMode: PropTypes.bool.isRequired
-};

@@ -4,14 +4,14 @@ services:
   backend:
     build:
       context: .
-      dockerfile: Dockerfile.backend
+      dockerfile: Dockerfile.backend.prod
     ports:
       - '8000:8000'
     volumes:
       - app_data:/app/data
     environment:
       - PYTHONPATH=/app
-      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY env var é obrigatória em produção}
       - DATABASE_URL=sqlite:///./data/inventory.db
     restart: unless-stopped
     healthcheck:

@@ -30,7 +30,8 @@
     "confirmLogout": "Confirm Logout",
     "logoutMessage": "Are you sure you want to logout?",
     "clickToExpand": "Click to expand",
-    "clickToMinimize": "Click to minimize"
+    "clickToMinimize": "Click to minimize",
+    "uncategorized": "Uncategorized"
   },
   "tour": {
     "previous": "Previous",
@@ -70,22 +71,13 @@
     "totalSuppliers": "Total Suppliers",
     "pendingOrders": "Pending Orders",
     "recentActivity": "Recent Activity",
-    "websiteTraffic": "Website Traffic",
     "stockLevels": "Stock Levels",
     "productsByCategory": "Products by Category",
     "lowStockAlerts": "Low Stock Alerts",
     "topPerforming": "Top Performing Products",
     "total": "Total",
-    "pageViews": "Page Views",
-    "uniqueVisitors": "Unique Visitors",
-    "avgSessionTime": "Avg. Session Time",
-    "bounceRate": "Bounce Rate",
-    "socialMedia": "Social Media",
-    "organicSearch": "Organic Search",
-    "directTraffic": "Direct Traffic",
-    "referralTraffic": "Referral Traffic",
-    "trafficSources": "Traffic Sources",
-    "totalTraffic": "Total Traffic"
+    "emptyTitle": "No products registered yet",
+    "emptyDescription": "Register products to see real inventory, sales and stock metrics."
   },
   "products": {
     "title": "Products",

@@ -30,7 +30,8 @@
     "confirmLogout": "Confirmar Saída",
     "logoutMessage": "Tem certeza que deseja sair?",
     "clickToExpand": "Clique para expandir",
-    "clickToMinimize": "Clique para minimizar"
+    "clickToMinimize": "Clique para minimizar",
+    "uncategorized": "Sem categoria"
   },
   "tour": {
     "previous": "Anterior",
@@ -70,22 +71,13 @@
     "totalSuppliers": "Total de Fornecedores",
     "pendingOrders": "Pedidos Pendentes",
     "recentActivity": "Atividade Recente",
-    "websiteTraffic": "Tráfego do Site",
     "stockLevels": "Níveis de Estoque",
     "productsByCategory": "Produtos por Categoria",
     "lowStockAlerts": "Alertas de Estoque Baixo",
     "topPerforming": "Produtos Mais Vendidos",
     "total": "Total",
-    "pageViews": "Visualizações",
-    "uniqueVisitors": "Visitantes Únicos",
-    "avgSessionTime": "Tempo Médio de Sessão",
-    "bounceRate": "Taxa de Rejeição",
-    "socialMedia": "Redes Sociais",
-    "organicSearch": "Busca Orgânica",
-    "directTraffic": "Tráfego Direto",
-    "referralTraffic": "Tráfego de Referência",
-    "trafficSources": "Fontes de Tráfego",
-    "totalTraffic": "Tráfego Total"
+    "emptyTitle": "Nenhum produto cadastrado ainda",
+    "emptyDescription": "Cadastre produtos para começar a ver métricas reais de inventário, vendas e estoque."
   },
   "products": {
     "title": "Produtos",

@@ -1,38 +1,34 @@
 import PropTypes from 'prop-types';
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useCallback, useContext } from 'react';
 import { useTranslation } from 'react-i18next';
 
-const LanguageContext = createContext();
+/**
+ * Fachada simples sobre o i18next. Toda persistência e detecção de idioma
+ * já é feita pelo i18next-browser-languagedetector (chave i18nextLng em
+ * localStorage). Este context só expõe o idioma atual e um setter.
+ */
+const LanguageContext = createContext(null);
 
 export const useLanguage = () => {
-  const context = useContext(LanguageContext);
-  if (!context) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
+  const ctx = useContext(LanguageContext);
+  if (!ctx) {
+    throw new Error('useLanguage deve ser usado dentro de <LanguageProvider>');
   }
-  return context;
+  return ctx;
 };
 
 export const LanguageProvider = ({ children }) => {
   const { i18n } = useTranslation();
-  const [currentLanguage, setCurrentLanguage] = useState('en');
 
-  useEffect(() => {
-    // Carregar idioma salvo no localStorage
-    const savedLanguage = localStorage.getItem('language');
-    if (savedLanguage) {
-      setCurrentLanguage(savedLanguage);
-      i18n.changeLanguage(savedLanguage);
-    }
-  }, [i18n]);
-
-  const changeLanguage = language => {
-    setCurrentLanguage(language);
-    i18n.changeLanguage(language);
-    localStorage.setItem('language', language);
-  };
+  const changeLanguage = useCallback(
+    language => {
+      i18n.changeLanguage(language);
+    },
+    [i18n]
+  );
 
   const value = {
-    currentLanguage,
+    currentLanguage: i18n.resolvedLanguage || i18n.language || 'pt',
     changeLanguage
   };
 
